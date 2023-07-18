@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Draggable Div</title>
+    <style>
+        body {
+            margin-top: 40px;
+            text-align: center;
+            font-size: 14px;
+            font-family: "Lucida Grande", Helvetica, Arial, Verdana, sans-serif;
+        }
+
+        #wrap {
+            width: 500px;
+            margin: 0 auto;
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: auto auto auto auto;
+            grid-gap: 10px;
+            background-color: #ff9a9e;
+            padding: 10px;
+            border-radius: 10px;
+        }
+
+        .box {
+            border-radius: .5em;
+            color: #fff;
+            padding: 10px;
+            font-size: 17px;
+            cursor: move;
+        }
+
+        .box-1 {
+            background-color: #ff758c;
+        }
+        .box-2 {
+            background-color: #a1c4fd;
+        }
+        .box-3 {
+            background-color: #cfd9df;
+        }
+        .box-4 {
+            background-color: #667eea;
+        }
+        .box-5 {
+            background-color: #e2d1c3;
+        }
+        .box-6 {
+            background-color: #89f7fe;
+        }
+        .box-7 {
+            background-color: #6f86d6;
+        }
+        .box-8 {
+            background-color: #80d0c7;
+        }
+        .box-9 {
+            background-color: #1e3c72;
+        }
+
+        .header {
+            background-color: #fff;
+            border-radius: .2em;
+            padding: 10px;
+        }
+
+        .header-div {
+            border-radius: .2em;
+            padding: 10px;
+        }
+
+        .box.over {
+            border: 3px dotted #666;
+        }
+
+        [draggable] {
+            user-select: none;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 4px;
+            border: none;
+            background-color: #a3bded;
+            color: #fff;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+
+        button:hover {
+            background-color: #6991c7;
+        }
+        #undoBtn{
+            background-color: #1e3c72;
+
+        }
+        #undoBtn:hover{
+            background-color: #2a5298;
+
+        }
+    </style>
+</head>
+
+<body>
+    <div id="wrap">
+        <h2>Draggable Div</h2>
+        <div class="grid-container">
+            <div draggable="true" class="header-div"></div>
+            <div class="header">C1</div>
+            <div class="header">C2</div>
+            <div class="header">C3</div>
+            <div class="header">R1</div>
+
+            <div draggable="true" class="box box-1">100</div>
+            <div draggable="true" class="box box-2">200</div>
+            <div draggable="true" class="box box-3">300</div>
+            <div class="header">R2</div>
+
+            <div draggable="true" class="box box-4">400</div>
+            <div draggable="true" class="box box-5">500</div>
+            <div draggable="true" class="box box-6">600</div>
+            <div class="header">R3</div>
+
+            <div draggable="true" class="box box-7">700</div>
+            <div draggable="true" class="box box-8">800</div>
+            <div draggable="true" class="box box-9">900</div>
+        </div>
+        <button id="refreshBtn">Reset</button>
+        <button id="undoBtn" disabled>Undo Last Action</button>
+    </div>
+
+    <script>
+        function refreshPage() {
+            location.reload();
+        }
+        let initialContent = []; // Array to store the initial HTML content of the boxes
+        let lastUpdate = []; // Array to store the HTML content of the boxes for the last update
+
+        // Add click event listener to the refresh button
+        document.getElementById('refreshBtn').addEventListener('click', refreshPage);
+        document.addEventListener('DOMContentLoaded', (event) => {
+            function markDraggedBox(box) {
+            box.classList.add('dragged');
+        }
+
+        function unmarkDraggedBox(box) {
+            box.classList.remove('dragged');
+        }
+
+        function storeInitialContent() {
+            const boxes = document.querySelectorAll('.grid-container .box');
+            initialContent = Array.from(boxes).map((box) => box.innerHTML);
+        }
+
+        function storeLastUpdate() {
+            const boxes = document.querySelectorAll('.grid-container .box');
+            lastUpdate = Array.from(boxes).map((box) => box.innerHTML);
+        }
+
+        function restoreLastUpdate() {
+            const boxes = document.querySelectorAll('.grid-container .box');
+            boxes.forEach((box, index) => {
+                box.innerHTML = lastUpdate[index];
+            });
+        }
+        function handleUndoClick() {
+            restoreLastUpdate();
+            resetDragState();
+        }
+        function resetDragState() {
+            const boxes = document.querySelectorAll('.grid-container .box');
+            boxes.forEach((box) => {
+                unmarkDraggedBox(box);
+                box.removeEventListener('dragstart', handleDragStart);
+                box.addEventListener('dragstart', handleDragStart, false);
+            });
+            lastUpdate = [];
+            document.getElementById('undoBtn').disabled = true;
+        }
+            var dragSrcEl = null;
+
+            function handleDragStart(e) {
+                this.style.opacity = '0.4';
+
+                dragSrcEl = this;
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/html', this.innerHTML);
+            }
+
+        document.getElementById('undoBtn').addEventListener('click', handleUndoClick);
+
+            function handleDragOver(e) {
+                if (e.preventDefault) {
+                    e.preventDefault();
+                }
+
+                e.dataTransfer.dropEffect = 'move';
+                document.getElementById('undoBtn').disabled = false;
+            storeLastUpdate();
+                return false;
+            }
+
+            function handleDragEnter(e) {
+                this.classList.add('over');
+            }
+
+            function handleDragLeave(e) {
+                this.classList.remove('over');
+            }
+
+            function handleDrop(e) {
+                if (e.stopPropagation) {
+                    e.stopPropagation(); // stops the browser from redirecting.
+                }
+
+                if (dragSrcEl != this) {
+                    if (dragSrcEl.className !== "fc-event") {
+                        dragSrcEl.innerHTML = this.innerHTML;
+                        this.innerHTML = e.dataTransfer.getData('text/html');
+                    } else {
+                        this.innerHTML = e.dataTransfer.getData('text/html');
+                    }
+                }
+
+                return false;
+            }
+
+            function handleDragEnd(e) {
+                this.style.opacity = '1';
+
+                items.forEach(function (item) {
+                    item.classList.remove('over');
+                });
+            }
+
+
+            let items = document.querySelectorAll('.grid-container .box');
+            items.forEach(function (item) {
+                item.addEventListener('dragstart', handleDragStart, false);
+                item.addEventListener('dragenter', handleDragEnter, false);
+                item.addEventListener('dragover', handleDragOver, false);
+                item.addEventListener('dragleave', handleDragLeave, false);
+                item.addEventListener('drop', handleDrop, false);
+                item.addEventListener('dragend', handleDragEnd, false);
+            });
+        });
+    </script>
+</body>
+
+</html>
